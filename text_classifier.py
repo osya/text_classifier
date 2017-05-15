@@ -8,8 +8,11 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score, classification_report, roc_curve
 import matplotlib.pyplot as plt
+import zipfile
 
-df = pd.read_csv('data/SMSSpamCollection', sep='\t', names=['Status', 'Message'])
+
+zf = zipfile.ZipFile('data/smsspamcollection.zip')
+df = pd.read_csv(zf.open('SMSSpamCollection'), sep='\t', names=['Status', 'Message'])
 df['Status'] = pd.get_dummies(df['Status'])['ham']
 
 df_x, df_y = df['Message'], df['Status']
