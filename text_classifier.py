@@ -6,7 +6,8 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, roc_auc_score, classification_report
+from sklearn.metrics import accuracy_score, roc_auc_score, classification_report, roc_curve
+import matplotlib.pyplot as plt
 
 df = pd.read_csv('data/SMSSpamCollection', sep='\t', names=['Status', 'Message'])
 df['Status'] = pd.get_dummies(df['Status'])['ham']
@@ -29,3 +30,14 @@ pred = model.predict(x_test_cv)
 print('Accuracy is %2.2f' % accuracy_score(y_test, pred))
 print('ROC AUC score is %2.2f' % roc_auc_score(y_test, pred))
 print (classification_report(y_test, pred))
+
+fpr, tpr, thresholds = roc_curve(y_test, pred)
+plt.figure()
+plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc_score(y_test, pred))
+plt.plot([0,1], [0,1], 'k--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='lower right')
+plt.show()
