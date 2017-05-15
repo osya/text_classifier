@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, roc_auc_score, classification_report
 
 df = pd.read_csv('data/SMSSpamCollection', sep='\t', names=['Status', 'Message'])
 df['Status'] = pd.get_dummies(df['Status'])['ham']
@@ -27,3 +27,5 @@ x_test_cv = cv.transform(x_test)
 pred = model.predict(x_test_cv)
 
 print('Accuracy is %2.2f' % accuracy_score(y_test, pred))
+print('ROC AUC score is %2.2f' % roc_auc_score(y_test, pred))
+print (classification_report(y_test, pred))
