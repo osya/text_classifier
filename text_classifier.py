@@ -8,7 +8,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score, classification_report, roc_curve
+from sklearn.metrics import accuracy_score, roc_auc_score, classification_report, roc_curve, confusion_matrix
 import matplotlib.pyplot as plt
 import zipfile
 
@@ -31,15 +31,16 @@ model = MultinomialNB()
 model.fit(x_train_dtm, y_train)
 
 x_test_dtm = cv.transform(x_test)
-pred = model.predict(x_test_dtm)
+y_pred = model.predict(x_test_dtm)
 
-print('Accuracy is %2.2f' % accuracy_score(y_test, pred))
-print('ROC AUC score is %2.2f' % roc_auc_score(y_test, pred))
-print(classification_report(y_test, pred))
+print('Accuracy is %2.2f' % accuracy_score(y_test, y_pred))
+print('ROC AUC score is %2.2f' % roc_auc_score(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+print(confusion_matrix(y_test, y_pred))
 
-# fpr, tpr, thresholds = roc_curve(y_test, pred)
+# fpr, tpr, thresholds = roc_curve(y_test, y_pred)
 # plt.figure()
-# plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc_score(y_test, pred))
+# plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc_score(y_test, y_pred))
 # plt.plot([0, 1], [0, 1], 'k--')
 # plt.xlim([0.0, 1.0])
 # plt.ylim([0.0, 1.05])
