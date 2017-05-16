@@ -17,21 +17,21 @@ df = pd.read_csv(zf.open('SMSSpamCollection'), sep='\t', names=['Status', 'Messa
 df['Status_num'] = pd.get_dummies(df['Status'])['ham']
 
 df_x, df_y = df['Message'], df['Status_num']
-x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2, random_state=42)
+x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2, random_state=1)
 
 cv = TfidfVectorizer(ngram_range=(1, 1), min_df=1, stop_words='english')
 # cv = CountVectorizer(ngram_range=(1,1), stop_words='english')
 
-x_train_cv = cv.fit_transform(x_train)
+x_train_dtm = cv.fit_transform(x_train)
 
-# model = MultinomialNB()
+model = MultinomialNB()
 # model = LogisticRegression(penalty='l2', C=1)
 # model = DecisionTreeClassifier(random_state=0, max_depth=2)
-model = KNeighborsClassifier()
-model.fit(x_train_cv, y_train)
+# model = KNeighborsClassifier()
+model.fit(x_train_dtm, y_train)
 
-x_test_cv = cv.transform(x_test)
-pred = model.predict(x_test_cv)
+x_test_dtm = cv.transform(x_test)
+pred = model.predict(x_test_dtm)
 
 print('Accuracy is %2.2f' % accuracy_score(y_test, pred))
 print('ROC AUC score is %2.2f' % roc_auc_score(y_test, pred))
