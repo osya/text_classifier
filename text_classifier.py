@@ -14,9 +14,9 @@ import zipfile
 
 zf = zipfile.ZipFile('data/smsspamcollection.zip')
 df = pd.read_csv(zf.open('SMSSpamCollection'), sep='\t', names=['Status', 'Message'])
-df['Status'] = pd.get_dummies(df['Status'])['ham']
+df['Status_num'] = pd.get_dummies(df['Status'])['ham']
 
-df_x, df_y = df['Message'], df['Status']
+df_x, df_y = df['Message'], df['Status_num']
 x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2, random_state=42)
 
 cv = TfidfVectorizer(ngram_range=(1, 1), min_df=1, stop_words='english')
