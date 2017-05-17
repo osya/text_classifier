@@ -1,62 +1,54 @@
-# init
-libs <-c("tm", "plyr", "class")
+# Set seed for reproducible results
+set.seed(100)
+
+# Packages init
+libs <-c("tm", "plyr", "class", "SnowballC") # "tm" - Text mining: Corpus and Document Term Matrix; "class" - KNN model; "SnowballC" - Stemming words
 lapply(libs, require, character.only = TRUE)
 
-# Set options
-options(stringsAsFactors = FALSE)
+# Read csv with two columns: text and category
+df <- read.table(unz("data/smsspamcollection.zip", "SMSSpamCollection"), 
+                   sep="\t", header=F, stringsAsFactors=F, quote="", col.names=c("Category", "Message"))
 
-# Set parameters
-candidates <- c("romney", "obama")
-pathname <- "C:/Users/.../speeches"
+# Create corpus
+docs <- Corpus(VectorSource(df$Message))
 
-# clean text
-cleanCorpus <- function(corpus) {
-  corpus.tmp <- tm_map(corpus, removePunctuation)
-  corpus.tmp <- tm_map(corpus.tmp, stripWhitespace)
-  corpus.tmp <- tm_map(corpus.tmp, tolower)
-  corpus.tmp <- tm_map(corpus.tmp, removeWords, stopwords("english"))
-  return(corpus.tmp)
-}
+# Clean corpus
+docs <- tm_map(docs, content_transformer(tolower))
+docs <- tm_map(docs, removeNumbers)
+docs <- tm_map(docs, removeWords, stopwords("english"))
+docs <- tm_map(docs, removePunctuation)
+docs <- tm_map(docs, stripWhitespace)
+docs <- tm_map(docs, stemDocument, language = "english")
 
-# build TDM
-generateTDM <- function(cand, path) {
-  s.dir <- sprintf("%s/%s", path, cand)
-  s.cor <- Corpus(DirSource(directory = s.dir, encoding = "ANSI"))
-  s.cor.cl <- cleanCorpus(s.cor)
-  s.tdm <- TermDocumentMatrix(s.cor.cl)
-  
-  s.tdm <- removeSparseTerms(s.tdm, 0.7)
-  result <- list(name = cand, tdm = s.tdm)
-}
+# Create dtm
+dtm <- DocumentTermMatrix(docs)
+dtm <- removeSparseTerms(dtm, 1-0.001)
 
-tdm <- lapply(candidates, generateTDM, path = pathname)
+# Transform dtm to matrix to data frame - df is easier to work with
+mat.df <- as.data.frame(data.matrix(dtm), stringsAsfactors = FALSE)
 
-# atatch name
-bindCandidateToTDM <- function(tdm) {
-  s.mat <- t(data.matrix(tdm[["tdm"]]))
-  s.df <- as.data.frame(s.mat, stringAsFactors = FALSE)
-  
-  s.df <- cbind(s.df, rep(tdm[["name"]], nrow(s.df)))
-  colnames(s.df)[ncol(s.df)] <- "targetCandidate"
-  return(s.df)
-}
+# Column bind category (known classification)
+mat.df <- cbind(mat.df, df$Category)
 
-candTDM <- lapply(tdm, bindCandidateToTDM)
+# Change name of new column to "category"
+colnames(mat.df)[ncol(mat.df)] <- "category"
 
-# stack
-tdm.Stack <- do.call(rbind.fill, candTDM)
-tdm.stack[is.na[tdm.stack]] <- 0
+# Split data by rownumber into two equal portions
+train <- sample(nrow(mat.df), ceiling(nrow(mat.df) * .70))
+test <- (1:nrow(mat.df))[- train]
 
-# hold-out
-train.idx <- sample[nrow(tdm.stack), ceiling(nrow(tdm.stack) * 0.7)]
-test.idx <-(1:nrow(tdm.stack))[-train.idx]
+# Isolate classifier
+cl <- mat.df[, "category"]
 
-# model - KNN
-model.cand <- tdm.stack[, "targetCandidate"]
-tdm.stack.nl <- tdm.stack[, !colnames(tdm.stack) %in% "targetCandidate"]
+# Create model data and remove "category"
+modeldata <- mat.df[,!colnames(mat.df) %in% "category"]
 
-knn.pred <- knn(tdm.stack.nl[train.idx, ], tdm.stack.nl(test.idx, ), tdm.cand(train.idx))
+# Create model: training set, test set, training set classifier
+knn.pred <- knn(modeldata[train, ], modeldata[test, ], cl[train])
 
-# accuracy
-conf.mat <- table("Predictions" = knn.pred, Actual = tdm.cand[test.idx])
-(accuracy <- sum(diag(conf.mat)) / length(text.idx) * 100)
+# Confusion matrix
+conf.mat <- table("Predictions" = knn.pred, Actual = cl[test])
+conf.mat
+
+# Accuracy
+(accuracy <- sum(diag(conf.mat))/length(test) * 100)
