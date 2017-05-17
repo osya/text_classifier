@@ -21,12 +21,14 @@ for word in bowB:
 
 # print(pd.DataFrame([wordDictA, wordDictB]))
 
+
 def computeTF(wordDict, bow):
     tfDict = {}
     bowCount = len(bow)
     for word, count in wordDict.items():
         tfDict[word]=count/float(bowCount)
     return tfDict
+
 
 def computeIDF(docList):
     import math

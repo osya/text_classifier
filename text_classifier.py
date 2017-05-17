@@ -11,6 +11,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, classification_report, roc_curve, confusion_matrix
 import matplotlib.pyplot as plt
 import zipfile
+import nltk
+from nltk.stem.porter import PorterStemmer
 
 zf = zipfile.ZipFile('data/smsspamcollection.zip')
 df = pd.read_csv(zf.open('SMSSpamCollection'), sep='\t', names=['Status', 'Message'])
@@ -19,7 +21,21 @@ df['Status_num'] = pd.get_dummies(df['Status'])['ham']
 df_x, df_y = df['Message'], df['Status_num']
 x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2, random_state=1)
 
-cv = TfidfVectorizer(ngram_range=(1, 1), min_df=1, stop_words='english')
+
+def stem_tokens(tokens, stemmer):
+    stemmed = set()
+    for item in tokens:
+        stemmed.add(stemmer.stem(item))
+    return stemmed
+
+
+def tokenize(text):
+    tokens = nltk.word_tokenize(text)
+    stems = stem_tokens(tokens, PorterStemmer())
+    return stems
+
+cv = TfidfVectorizer(tokenizer=tokenize, ngram_range=(1, 1), min_df=1, stop_words='english')
+# cv = TfidfVectorizer(ngram_range=(1, 1), min_df=1, stop_words='english')
 # cv = CountVectorizer(ngram_range=(1,1), stop_words='english')
 
 x_train_dtm = cv.fit_transform(x_train)
